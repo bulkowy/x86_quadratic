@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
-// #include "allegro5/internal/aintern_bitmap.h"
 #include "f.h"
 
 const int screen_width = 600;
@@ -11,22 +10,24 @@ const int screen_height = 600;
 int main()
 {
   ALLEGRO_DISPLAY *display = NULL;
-  
   ALLEGRO_BITMAP *bitmap = NULL;
   
   float coeffs[3], S;       // y = ax^2 + bx + c && dx^2 + dy^2 = S
                             // [0] = a, [1] = b, [2] = c
 
+  // initialize allegro
   if(!al_init()) {
     fprintf(stderr, "failed to initialize allegro!\n");
     return -1;
   }
 
+  // initialize keyboard
   if(!al_install_keyboard()) {
     fprintf(stderr, "failed to initialize the keyboard!\n");
     return -1;
   }
 
+  // test values
   coeffs[0] = 10.0;
   coeffs[1] = 1.1;
   coeffs[2] = 10.0;
@@ -34,25 +35,33 @@ int main()
   int scale = 10;
   S = 10.0;
 
+  // set format of bitmap
   al_set_new_bitmap_format(ALLEGRO_PIXEL_FORMAT_BGR_888);
+
+  // create display
   display = al_create_display(screen_width, screen_height);
   if(!display) {
     fprintf(stderr, "failed to create display!\n");
     return -1;
   }
 
+  // add possibility to create primitive figures
   if(!al_init_primitives_addon()){
     return -1;
   }
 
+  // create bitmap
   bitmap = al_create_bitmap(screen_width, screen_height);
   if(!bitmap) {
     fprintf(stderr, "failed to create bouncer bitmap!\n");
     al_destroy_display(display);
     return -1;
   }
+
   al_set_target_bitmap(bitmap);
   al_set_target_bitmap(al_get_backbuffer(display));
+
+  // initialize event queue for keyboard input
   ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
   if(!event_queue) {
     fprintf(stderr, "failed to create event_queue!\n");
@@ -60,11 +69,10 @@ int main()
     al_destroy_display(display);
     return -1;
   }
-  //al_register_event_source(event_queue, al_get_display_event_source(display));
+
+  // get source for events
   al_register_event_source(event_queue, al_get_keyboard_event_source());
 
- 
-  
 
   ALLEGRO_EVENT event;
   ALLEGRO_LOCKED_REGION *locked;
@@ -73,28 +81,28 @@ int main()
     al_wait_for_event(event_queue, &event);
     
     // quit program if window close button or escape is pressed
-    if( event.type == ALLEGRO_EVENT_DISPLAY_CLOSE || event.keyboard.keycode == ALLEGRO_KEY_ESCAPE ) break;
+    if( event.keyboard.keycode == ALLEGRO_KEY_ESCAPE ) break;
 
     if( event.type == ALLEGRO_EVENT_KEY_DOWN){
       switch(event.keyboard.keycode){
         case ALLEGRO_KEY_DOWN: scale--;       break;
         case ALLEGRO_KEY_UP: scale++;         break;
-        case ALLEGRO_KEY_1: coeffs[0] += 1.0; break;
-        case ALLEGRO_KEY_Q: coeffs[0] += 0.1; break;
-        case ALLEGRO_KEY_A: coeffs[0] -= 0.1; break;
-        case ALLEGRO_KEY_Z: coeffs[0] -= 1.0; break;
-        case ALLEGRO_KEY_2: coeffs[1] += 1.0; break;
-        case ALLEGRO_KEY_W: coeffs[1] += 0.1; break;
-        case ALLEGRO_KEY_S: coeffs[1] -= 0.1; break;
-        case ALLEGRO_KEY_X: coeffs[1] -= 1.0; break;
-        case ALLEGRO_KEY_3: coeffs[2] += 1.0; break;
-        case ALLEGRO_KEY_E: coeffs[2] += 0.1; break;
-        case ALLEGRO_KEY_D: coeffs[2] -= 0.1; break;
-        case ALLEGRO_KEY_C: coeffs[2] -= 1.0; break;
-        case ALLEGRO_KEY_4: S         += 1.0; break;
-        case ALLEGRO_KEY_R: S         += 0.1; break;
-        case ALLEGRO_KEY_F: S         -= 0.1; break;
-        case ALLEGRO_KEY_V: S         -= 1.0; break;
+        case ALLEGRO_KEY_1: coeffs[0] += 1.0; break;  // a
+        case ALLEGRO_KEY_Q: coeffs[0] += 0.1; break;  // a
+        case ALLEGRO_KEY_A: coeffs[0] -= 0.1; break;  // a
+        case ALLEGRO_KEY_Z: coeffs[0] -= 1.0; break;  // a
+        case ALLEGRO_KEY_2: coeffs[1] += 1.0; break;  // b
+        case ALLEGRO_KEY_W: coeffs[1] += 0.1; break;  // b
+        case ALLEGRO_KEY_S: coeffs[1] -= 0.1; break;  // b
+        case ALLEGRO_KEY_X: coeffs[1] -= 1.0; break;  // b
+        case ALLEGRO_KEY_3: coeffs[2] += 1.0; break;  // c
+        case ALLEGRO_KEY_E: coeffs[2] += 0.1; break;  // c
+        case ALLEGRO_KEY_D: coeffs[2] -= 0.1; break;  // c
+        case ALLEGRO_KEY_C: coeffs[2] -= 1.0; break;  // c
+        case ALLEGRO_KEY_4: S         += 1.0; break;  // S
+        case ALLEGRO_KEY_R: S         += 0.1; break;  // S
+        case ALLEGRO_KEY_F: S         -= 0.1; break;  // S
+        case ALLEGRO_KEY_V: S         -= 1.0; break;  // S
       }
     }
 
@@ -104,7 +112,10 @@ int main()
     // calculate after change
     locked = al_lock_bitmap(bitmap, ALLEGRO_PIXEL_FORMAT_BGR_888, ALLEGRO_LOCK_READWRITE);
     data = locked->data;
-    f(data, screen_width, screen_height, coeffs, S);
+    int pitch = locked->pitch;
+
+    printf("pitch= %d\n", pitch);
+    f(data, screen_width, screen_height, pitch, coeffs, S, scale);
 
     al_unlock_bitmap(bitmap);
     al_draw_bitmap(bitmap, 0, 0, 0);
