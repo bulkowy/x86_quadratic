@@ -203,11 +203,11 @@ check_for_loop:
   comiss xmm0, DWORD  [rbp-8]
   ja for_loop
 
-  ; prevX = closest;
-  movss xmm0, DWORD  [rbp-4]
+  ; prevX = x;
+  movss xmm0, DWORD  [rbp-8]
   movss DWORD  [rbp-12], xmm0
 
-  ; wynikowe y =a*closest*closest + b*closest + c
+  ; y = coeffs[0]*closest*closest + coeffs[1]*closest + coeffs[2];
   mov rax, QWORD  [rbp-96]
   movss xmm0, DWORD  [rax]
   mulss xmm0, DWORD  [rbp-4]
@@ -224,7 +224,7 @@ check_for_loop:
   addss xmm0, xmm1
   movss DWORD  [rbp-44], xmm0
 
-  ; przemieszczenie = (3*(closest-xPocz)*pixVal - pitch*(y-yPocz)*pixVal)
+  ; przemiesz = (int)(3*(closest-xPocz)*pixVal - pitch*(y-yPocz)*pixVal);
   movss xmm0, DWORD  [rbp-4]
   movaps xmm1, xmm0
   subss xmm1, DWORD  [rbp-24]
@@ -240,7 +240,7 @@ check_for_loop:
   cvttss2si eax, xmm0
   mov DWORD  [rbp-48], eax
 
-  ; x > (skala - S)
+  ; if(x > (scale-S))
   cvtsi2ss xmm0, DWORD  [rbp-100]
   movaps xmm1, xmm0
   subss xmm1, DWORD  [rbp-88]
@@ -248,7 +248,7 @@ check_for_loop:
   comiss xmm0, xmm1
   ja end
 
-  ; przemieszczenie > max Przemieszczenie || przemieszczenie < 0
+  ; if (przemiesz > maxPrzemiesz || przemiesz < 0)
   mov eax, DWORD  [rbp-48]
   cmp eax, DWORD  [rbp-52]
   jg continue
@@ -265,7 +265,7 @@ continue:
   jmp while_loop
 end:
   nop
-  cvtsi2ss xmm0, DWORD  [rbp-48]
+  cvtsi2ss xmm0, DWORD  [rbp-52]
   leave
   ret
 

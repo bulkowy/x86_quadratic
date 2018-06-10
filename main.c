@@ -4,6 +4,7 @@
 #include <allegro5/allegro_primitives.h>
 #include "f.h"
 
+
 const int screen_width = 600;
 const int screen_height = 600;
 
@@ -28,12 +29,11 @@ int main()
   }
 
   // test values
-  coeffs[0] = 10.0;
-  coeffs[1] = 1.1;
-  coeffs[2] = 10.0;
-  float x = 10.0;
+  coeffs[0] = 1.0;
+  coeffs[1] = 0.0;
+  coeffs[2] = 0.0;
   int scale = 10;
-  S = 10.0;
+  S = 0.1;
 
   // set format of bitmap
   al_set_new_bitmap_format(ALLEGRO_PIXEL_FORMAT_BGR_888);
@@ -49,14 +49,13 @@ int main()
   if(!al_init_primitives_addon()){
     return -1;
   }
-
-  // create bitmap
   bitmap = al_create_bitmap(screen_width, screen_height);
   if(!bitmap) {
     fprintf(stderr, "failed to create bouncer bitmap!\n");
     al_destroy_display(display);
     return -1;
   }
+  
 
   al_set_target_bitmap(bitmap);
   al_set_target_bitmap(al_get_backbuffer(display));
@@ -79,6 +78,9 @@ int main()
   unsigned char *data;
   while(1){
     al_wait_for_event(event_queue, &event);
+
+    // create bitmap
+  
     
     // quit program if window close button or escape is pressed
     if( event.keyboard.keycode == ALLEGRO_KEY_ESCAPE ) break;
@@ -109,13 +111,21 @@ int main()
     // draw axises
     al_clear_to_color(al_map_rgb(79,79,79));
 
+    al_set_target_bitmap(bitmap);
+    al_clear_to_color(al_map_rgb(0,0,0));
+
+    al_set_target_backbuffer(display);
+
     // calculate after change
     locked = al_lock_bitmap(bitmap, ALLEGRO_PIXEL_FORMAT_BGR_888, ALLEGRO_LOCK_READWRITE);
+    //al_clear_to_color(al_map_rgb(0,0,0));
     data = locked->data;
     int pitch = locked->pitch;
-
+    
     printf("pitch= %d\n", pitch);
-    f(data, screen_width, screen_height, pitch, coeffs, S, scale);
+    float a = 1;
+    a = f(data, screen_width, screen_height, pitch, coeffs, S, scale);
+    printf("%f\n", a);
 
     al_unlock_bitmap(bitmap);
     al_draw_bitmap(bitmap, 0, 0, 0);
@@ -138,6 +148,7 @@ int main()
     }
     printf("a= %f, b= %f, c= %f, s = %f\n",coeffs[0], coeffs[1], coeffs[2], S);
     al_flip_display();
+    
   }
   
 
